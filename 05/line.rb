@@ -1,3 +1,5 @@
+require 'matrix'
+
 class Line
   def self.all_from_input(input)
     input.each_line.map do |line|
@@ -5,19 +7,28 @@ class Line
     end
   end
 
-  attr_reader :p1, :p2
+  attr_reader :root, :vector
 
   def initialize(p1, p2)
-    @p1 = p1
-    @p2 = p2
+    @root = Vector[*p1]
+    @vector = Vector[p2[0] - p1[0], p2[1] - p1[1]]
+  end
+
+  def p1
+    @root
+  end
+  def p2
+    @root + @vector
   end
 
   def vertical?
-    p1[0] == p2[0]
+    @vector.angle_with(Vector[0, 1]) == 0 ||
+      @vector.angle_with(Vector[0, -1]) == 0
   end
 
   def horizontal?
-    p1[1] == p2[1]
+    @vector.angle_with(Vector[1, 0]) == 0 ||
+      @vector.angle_with(Vector[-1, 0]) == 0
   end
 
   def diagonal?
@@ -25,12 +36,13 @@ class Line
   end
 
   def points
-    if vertical?
-      Range.new(*[p1[1], p2[1]].sort).map { |i| [p1[0], i] }
-    elsif horizontal?
-      Range.new(*[p1[0], p2[0]].sort).map { |i| [i, p1[1]] }
-    elsif diagonal?
-      []
+    normalized = @vector / @vector.to_a.map(&:abs).max
+    points = [p1.to_a]
+    current = p1
+    while current != p2
+      current += normalized
+      points << current.to_a
     end
+    points
   end
 end
